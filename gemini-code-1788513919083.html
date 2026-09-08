@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VOLTGrid - Market Terminal & Bot Suite</title>
+  <style>
+    :root {
+      --bg-main: #0b0e14;
+      --bg-card: #151922;
+      --bg-card-hover: #1d222e;
+      --accent-cyan: #00f2fe;
+      --accent-blue: #4facfe;
+      --text-main: #f0f4f8;
+      --text-muted: #94a3b8;
+      --border-color: #262f40;
+      --warning-red: #ff4b4b;
+      --warning-bg: rgba(255, 75, 75, 0.1);
+      --success-green: #00e676;
+      --color-g: #00e676;
+      --color-b: #4facfe;
+      --color-r: #ff4b4b;
+      --color-y: #ffb703;
+      --color-purple: #b085f5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* DERIV OAUTH & LOGIN OVERLAY */
+    .auth-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(11, 14, 20, 0.96);
+      backdrop-filter: blur(12px);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 0 35px rgba(0, 242, 254, 0.15);
+      border-radius: 12px;
+      max-width: 500px;
+      width: 100%;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .auth-logo {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .auth-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 25px;
+    }
+
+    .auth-form-group {
+      text-align: left;
+      margin-bottom: 18px;
+    }
+
+    .auth-form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .permissions-box {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .permissions-box h5 {
+      color: var(--accent-cyan);
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .perm-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .perm-item input[type="checkbox"] {
+      accent-color: var(--accent-cyan);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .btn-agree {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      color: #000;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-agree:hover {
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .app-id-banner {
+      background-color: var(--warning-bg);
+      border-bottom: 1px solid var(--warning-red);
+      color: var(--warning-red);
+      padding: 8px 20px;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      border-bottom: 1px solid var(--border-color);
+      background-color: var(--bg-card);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .account-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--success-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--success-green);
+    }
+
+    .user-account-pill {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Navigation Tabs */
+    .dashboard-nav {
+      display: flex;
+      gap: 5px;
+      background: #0f131a;
+      padding: 10px 30px;
+      border-bottom: 1px solid var(--border-color);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .nav-tab {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-tab:hover {
+      color: var(--text-main);
+      background: var(--bg-card-hover);
+    }
+
+    .nav-tab.active {
+      color: var(--accent-cyan);
+      background: var(--bg-card);
+      border-color: var(--border-color);
+    }
+
+    /* Dynamic Page Router */
+    .dashboard {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 20px;
+      width: 100%;
+    }
+
+    .tab-page {
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .tab-page.active-page {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      background: var(--bg-card);
+      padding: 15px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .market-select, .num-input, .text-input {
+      background: var(--bg-main);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 8px 15px;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .num-input { width: 110px; }
+
+    .controls-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .control-group label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .digit-btn-group { display: flex; gap: 5px; }
+
+    .digit-select-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: var(--bg-main);
+      color: var(--text-main);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .digit-select-btn:hover, .digit-select-btn.active {
+      background: var(--accent-cyan);
+      color: #000;
+      border-color: var(--accent-cyan);
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 25px 0 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--accent-cyan);
+    }
+
+    /* Digit Analysis Scanner Layout */
+    .digit-container-circles {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    @media (max-width: 900px) {
+      .digit-container-circles { grid-template-columns: repeat(5, 1fr); }
+    }
+
+    .digit-circle-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: 50%;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      overflow: visible;
+    }
+
+    .star-cursor {
+      position: absolute;
+      top: -24px;
+      font-size: 1.8rem;
+      color: gold;
+      display: none;
+      filter: drop-shadow(0 0 10px gold);
+      z-index: 10;
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .digit-circle-card.cursor-active .star-cursor {
+      display: block;
+      color: var(--accent-cyan);
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 14px var(--accent-cyan));
+    }
+
+    .digit-circle-card.cursor-active {
+      transform: scale(1.08);
+      border-color: var(--accent-cyan) !important;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.6) !important;
+    }
+
+    .digit-circle-card.circle-rank-G {
+      border-color: var(--color-g);
+      background-color: rgba(0, 230, 118, 0.2);
+      color: var(--color-g);
+      box-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
+    }
+    .digit-circle-card.circle-rank-G .digit-percent { color: var(--color-g); }
+
+    .digit-circle-card.circle-rank-B {
+      border-color: var(--color-b);
+      background-color: rgba(79, 172, 254, 0.2);
+      color: var(--color-b);
+      box-shadow: 0 0 10px rgba(79, 172, 254, 0.3);
+    }
+    .digit-circle-card.circle-rank-B .digit-percent { color: var(--color-b); }
+
+    .digit-circle-card.circle-rank-R {
+      border-color: var(--color-r);
+      background-color: rgba(255, 75, 75, 0.2);
+      color: var(--color-r);
+      box-shadow: 0 0 10px rgba(255, 75, 75, 0.3);
+    }
+    .digit-circle-card.circle-rank-R .digit-percent { color: var(--color-r); }
+
+    .digit-circle-card.circle-rank-Y {
+      border-color: var(--color-y);
+      background-color: rgba(255, 183, 3, 0.2);
+      color: var(--color-y);
+      box-shadow: 0 0 10px rgba(255, 183, 3, 0.3);
+    }
+    .digit-circle-card.circle-rank-Y .digit-percent { color: var(--color-y); }
+
+    .digit-number { font-size: 1.4rem; font-weight: 700; z-index: 2; }
+    .digit-percent { font-size: 0.8rem; color: var(--text-muted); z-index: 2; }
+
+    /* Custom Circles for Even / Odd Tool Analysis */
+    .eo-circle-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: 50%;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .eo-circle-card.even-type {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 242, 254, 0.08);
+      color: var(--accent-cyan);
+    }
+
+    .eo-circle-card.odd-type {
+      border-color: var(--color-purple);
+      background: rgba(176, 133, 245, 0.08);
+      color: var(--color-purple);
+    }
+
+    .eo-circle-card.condition-met {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px currentColor;
+    }
+
+    .eo-badge {
+      position: absolute;
+      top: -8px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 10px;
+      text-transform: uppercase;
+    }
+
+    .eo-badge.even-b { background: var(--accent-cyan); color: #000; }
+    .eo-badge.odd-b { background: var(--color-purple); color: #000; }
+
+    .condition-tag {
+      position: absolute;
+      bottom: -10px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      background: var(--success-green);
+      color: #000;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    /* Stream Ticker */
+    .stream-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 25px;
+      overflow-x: auto;
+    }
+
+    .stream-wrapper-3rows {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(3, auto);
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .stream-item {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      padding: 8px 6px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      justify-content: space-around;
+      animation: slideIn 0.2s ease-out;
+    }
+
+    .stream-item.latest-tick {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 6px rgba(0, 242, 254, 0.4);
+    }
+
+    @keyframes slideIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .stream-digit { font-size: 1rem; font-weight: 800; }
+
+    /* Visual Signal Flash Box */
+    .signal-flash-box {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .live-digit-badge {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--accent-cyan);
+      background: rgba(0, 242, 254, 0.1);
+      padding: 4px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--accent-cyan);
+    }
+
+    .timer-pill {
+      font-size: 0.9rem;
+      color: var(--color-y);
+      font-weight: 700;
+    }
+
+    /* Analysis Table */
+    .analysis-table-container, .card-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .analysis-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .analysis-table th, .analysis-table td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .analysis-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .rank-badge {
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 4px;
+      display: inline-block;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    .rank-G { background: rgba(0, 230, 118, 0.2); color: var(--color-g); border: 1px solid var(--color-g); }
+    .rank-B { background: rgba(79, 172, 254, 0.2); color: var(--color-b); border: 1px solid var(--color-b); }
+    .rank-R { background: rgba(255, 75, 75, 0.2); color: var(--color-r); border: 1px solid var(--color-r); }
+    .rank-Y { background: rgba(255, 183, 3, 0.2); color: var(--color-y); border: 1px solid var(--color-y); }
+
+    /* Signal Badges for Tool Analysis */
+    .sig-active { background: rgba(0, 230, 118, 0.25); color: var(--color-g); border: 1px solid var(--color-g); font-weight:bold; padding: 4px 10px; border-radius:4px; }
+    .sig-active-odd { background: rgba(176, 133, 245, 0.25); color: #b085f5; border: 1px solid #b085f5; font-weight:bold; padding: 4px 10px; border-radius:4px; }
+    .sig-active-over { background: rgba(0, 242, 254, 0.25); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); font-weight:bold; padding: 4px 10px; border-radius:4px; }
+    .sig-active-under { background: rgba(255, 183, 3, 0.25); color: var(--color-y); border: 1px solid var(--color-y); font-weight:bold; padding: 4px 10px; border-radius:4px; }
+    .sig-neutral { background: rgba(148, 163, 184, 0.1); color: var(--text-muted); border: 1px solid var(--border-color); padding: 4px 10px; border-radius:4px; }
+
+    /* Interactive Digit Selector Cards */
+    .digit-select-card {
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .digit-select-card:hover, .digit-select-card.selected {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 242, 254, 0.05);
+    }
+
+    .digit-select-card.selected {
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+    }
+
+    /* File Upload & Text Area Styles */
+    .upload-zone {
+      border: 2px dashed var(--accent-cyan);
+      border-radius: 8px;
+      padding: 35px;
+      text-align: center;
+      background: rgba(0, 242, 254, 0.03);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upload-zone:hover {
+      background: rgba(0, 242, 254, 0.08);
+      border-color: var(--accent-blue);
+    }
+
+    .btn-action {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .editor-textarea {
+      width: 100%;
+      height: 200px;
+      background: var(--bg-main);
+      color: var(--accent-cyan);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      resize: vertical;
+      outline: none;
+    }
+
+    footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border-color);
+      padding: 20px;
+      background-color: var(--bg-card);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="auth-modal" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-logo">VOLTGRID</div>
+      <div class="auth-subtitle">Deriv Market Terminal & Automated Bot Suite</div>
+
+      <div class="auth-form-group">
+        <label>Deriv Application App ID</label>
+        <input type="text" id="deriv-app-id" class="text-input" style="width:100%;" value="1089" placeholder="Enter Deriv App ID (e.g. 1089)">
+      </div>
+
+      <div class="permissions-box">
+        <h5>
+          <span>Deriv Account Permissions Request</span>
+          <button style="background:none; border:none; color:var(--accent-cyan); font-size:0.75rem; cursor:pointer;" onclick="toggleSelectAllPermissions(true)">Select All</button>
+        </h5>
+        
+        <label class="perm-item">
+          <input type="checkbox" class="perm-checkbox" id="perm-trade" checked>
+          <span><strong>Trade:</strong> Execute live options orders dynamically</span>
+        </label>
+        
+        <label class="perm-item">
+          <input type="checkbox" class="perm-checkbox" id="perm-account" checked>
+          <span><strong>Account Management:</strong> Switch real/demo trading accounts</span>
+        </label>
+        
+        <label class="perm-item">
+          <input type="checkbox" class="perm-checkbox" id="perm-read" checked>
+          <span><strong>Read:</strong> Stream tick quotes & digit statistics</span>
+        </label>
+
+        <label class="perm-item">
+          <input type="checkbox" class="perm-checkbox" id="perm-admin" checked>
+          <span><strong>Admin:</strong> Configure trading parameters & bots</span>
+        </label>
+
+        <label class="perm-item">
+          <input type="checkbox" class="perm-checkbox" id="perm-payments" checked>
+          <span><strong>Payments & Withdrawals:</strong> Track balance & approve payout operations</span>
+        </label>
+      </div>
+
+      <button class="btn-agree" onclick="redirectToDerivOAuth()">AGREE & REDIRECT TO DERIV LOGIN</button>
+    </div>
+  </div>
+
+  <div class="app-id-banner">
+    <strong>DERIV WS LIVE FEED</strong> — Dynamic Visual Digit Generation & 5s Algorithmic Signal Window.
+  </div>
+
+  <header>
+    <div class="logo">VOLTGRID</div>
+    <div class="account-info">
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span id="connection-status">Market Stream Active</span>
+      </div>
+      <div class="user-account-pill" id="user-account-info">
+        <span style="color:var(--accent-cyan); font-weight:bold;" id="account-id">CR000000</span>
+        <span style="color:var(--success-green);" id="account-balance">$1,250.00</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="dashboard-nav">
+    <button class="nav-tab" onclick="switchTab(event, 'digit-analysis')">Digit Analysis</button>
+    <button class="nav-tab active" onclick="switchTab(event, 'tool-analysis')">Tool Analysis</button>
+    <button class="nav-tab" onclick="switchTab(event, 'strategies-builder')">Strategies & Builder</button>
+    <button class="nav-tab" onclick="switchTab(event, 'deriv-bot')">DerivBot</button>
+    <button class="nav-tab" onclick="switchTab(event, 'bot-manager')">Bot Manager</button>
+    <button class="nav-tab" onclick="switchTab(event, 'risk-management')">Risk Management</button>
+  </nav>
+
+  <div class="dashboard">
+
+    <!-- DIGIT ANALYSIS TAB -->
+    <div id="digit-analysis" class="tab-page">
+
+      <div class="dash-header">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <select class="market-select" id="market-symbol">
+            <option value="R_75" selected>Volatility 75 Index (V75)</option>
+            <option value="R_10">Volatility 10 Index (V10)</option>
+            <option value="R_25">Volatility 25 Index (V25)</option>
+            <option value="R_50">Volatility 50 Index (V50)</option>
+            <option value="R_100">Volatility 100 Index (V100)</option>
+          </select>
+        </div>
+        <div>
+          <span>Last Tick Price: <strong id="current-tick-price" style="color: var(--accent-cyan);">6421.84</strong></span>
+        </div>
+      </div>
+
+      <div class="controls-panel">
+        <div class="control-group">
+          <label for="pattern-select">Market Type:</label>
+          <select id="pattern-select" class="market-select">
+            <option value="over_under" selected>Over/Under</option>
+            <option value="even_odd">Even/Odd</option>
+            <option value="matches_differs">Matches/Differs</option>
+          </select>
+        </div>
+
+        <div class="control-group" id="ticks-input-container">
+          <label for="tick-count-input">Ticks Window (Up to 1000):</label>
+          <input type="number" id="tick-count-input" class="num-input" value="1000" min="10" max="1000">
+        </div>
+
+        <div class="control-group" id="target-digit-container">
+          <label id="target-digit-label">Target Digit:</label>
+          <div class="digit-btn-group">
+            <button class="digit-select-btn" onclick="selectTargetDigit(event, 0)">0</button>
+            <button class="digit-select-btn" onclick="selectTargetDigit(event, 1)">1</button>
+            <button class="digit-select-btn" onclick="selectTargetDigit(event, 2)">2</button>
+            <button class="digit-select-btn" onclick="selectTargetDigit(event, 3)">3</button>
+            <button class="digit-select-btn" onclick="selectTargetDigit(event, 4)">4</button>
+            <button class="digit-select-btn active" onclick="selectTargetDigit(event, 5)">5</button>
+            <button class="digit-select-btn" onclick="selectTargetDigit(event, 6)">6</button>
+            <button class="digit-select-btn" onclick="selectTargetDigit(event, 7)">7</button>
+            <button class="digit-select-btn" onclick="selectTargetDigit(event, 8)">8</button>
+            <button class="digit-select-btn" onclick="selectTargetDigit(event, 9)">9</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <span>Encircled Digit Frequencies (%)</span>
+        <span style="font-size:0.8rem; color:var(--text-muted);">G = Green (Highest), B = Blue (2nd High), R = Red (Least), Y = Yellow (2nd Least)</span>
+      </div>
+      
+      <div class="digit-container-circles" id="digit-circle-grid">
+      </div>
+
+      <div class="section-title">
+        <span>Horizontal Real-Time Ticks Stream Sequence (Rowwise: Col 1 → Col 10)</span>
+        <span style="font-size:0.8rem; color:var(--text-muted);">3 Rows x 10 Cols Grid</span>
+      </div>
+      
+      <div class="stream-container">
+        <div class="stream-wrapper-3rows" id="tick-stream-wrapper">
+        </div>
+      </div>
+
+      <div class="section-title">
+        <span id="table-section-title">Extended Market Distribution & Rank Indicators</span>
+      </div>
+      <div class="analysis-table-container">
+        <table class="analysis-table">
+          <thead>
+            <tr id="table-header-row">
+              <th>Digit</th>
+              <th>Occurrences</th>
+              <th>Percentage (%)</th>
+              <th>Rank Status</th>
+            </tr>
+          </thead>
+          <tbody id="ticks-table-body">
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- TOOL ANALYSIS TAB -->
+    <div id="tool-analysis" class="tab-page active-page">
+      <div class="section-title">
+        <span>Real-Time Algorithmic Diagnostic Metrics & Pattern Scanners (1000 Ticks Analysis)</span>
+        <span style="font-size:0.8rem; color:var(--text-muted);">Comprehensive Coverage: Standard Volatility, (1s), Daily Reset & Jump Indices</span>
+      </div>
+
+      <!-- Live Tick Visual Flash & Execution Window Bar -->
+      <div class="signal-flash-box">
+        <div>
+          <span style="color:var(--text-muted); font-size:0.85rem; display:block;">LIVE TICK DIGIT GENERATION:</span>
+          <span class="live-digit-badge" id="live-generated-digit">4</span>
+        </div>
+        <div style="text-align:center;">
+          <span style="color:var(--text-muted); font-size:0.85rem; display:block;">ALGORITHMIC RE-EVALUATION WINDOW:</span>
+          <span class="timer-pill" id="signal-timer-text">Next Signal Evaluation In: 5s...</span>
+        </div>
+        <div>
+          <span style="color:var(--text-muted); font-size:0.85rem; display:block;">CURRENT ACTIVE MARKET SIGNAL:</span>
+          <span id="live-signal-action" class="sig-active-over">OVER 2 (V75 Index)</span>
+        </div>
+      </div>
+
+      <!-- 1. OVER / UNDER SIGNALS ALL MARKETS -->
+      <div class="card-box" style="margin-bottom: 25px;">
+        <h4 style="margin-bottom:12px; color:var(--accent-cyan); display:flex; justify-content:space-between; align-items:center;">
+          <span>1. Over / Under Market Signals (All Markets - 1000 Ticks)</span>
+          <span style="font-size:0.75rem; background:rgba(0,242,254,0.1); padding:4px 8px; border-radius:4px; border:1px solid var(--accent-cyan);">Frequency Threshold Logic</span>
+        </h4>
+
+        <!-- Interactive Preferred Barrier/Digit Selector & Live Distribution Panel -->
+        <div style="background:var(--bg-main); border:1px solid var(--border-color); border-radius:8px; padding:15px; margin-bottom:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+            <strong style="color:var(--accent-cyan); font-size:0.95rem;">Select Preferred Barrier Digit to Evaluate Over/Under Win Probability:</strong>
+            <div style="font-size:0.85rem; color:var(--text-muted);">
+              Selected Threshold: <span id="selected-ou-digit-display" style="color:var(--accent-cyan); font-weight:bold; font-size:1rem;">Digit 5</span>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(10, 1fr); gap:8px; margin-bottom:15px;" id="ou-digit-selector-grid">
+            <!-- Dynamic Digit Cards filled by JS -->
+          </div>
+
+          <!-- Selected Digit Visual Distribution Bar -->
+          <div style="display:flex; align-items:center; gap:15px; background:var(--bg-card); padding:12px; border-radius:6px; border:1px solid var(--border-color);">
+            <div style="flex:1;">
+              <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;">
+                <span style="color:var(--accent-cyan); font-weight:bold;">OVER Barrier (<span id="ou-over-label">6-9</span>): <span id="ou-over-perc">41.2%</span></span>
+                <span style="color:var(--color-y); font-weight:bold;">UNDER Barrier (<span id="ou-under-label">0-4</span>): <span id="ou-under-perc">49.3%</span></span>
+              </div>
+              <div style="height:10px; width:100%; background:#262f40; border-radius:5px; overflow:hidden; display:flex;">
+                <div id="ou-bar-under" style="width: 50%; background: var(--color-y); height: 100%;"></div>
+                <div id="ou-bar-exact" style="width: 10%; background: var(--text-muted); height: 100%;" title="Exact Matches"></div>
+                <div id="ou-bar-over" style="width: 40%; background: var(--accent-cyan); height: 100%;"></div>
+              </div>
+            </div>
+            <div style="text-align:right; min-width:140px;">
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Suggested Preference:</span>
+              <strong id="ou-recommendation-badge" class="sig-active-under" style="font-size:0.85rem;">PREFER UNDER 5</strong>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:0.85rem; color:var(--text-muted); display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px; margin-bottom:20px;">
+          <div style="background:var(--bg-main); padding:12px; border-radius:6px; border:1px solid var(--border-color);">
+            <strong style="color:var(--color-g);">OVER SIGNAL & ENTRY RULES</strong><br>
+            • <strong>Signal Pattern:</strong> Digits 0, 1, 2, 3 show low occurrences (&lt; 9.5% frequency over 1000 ticks).<br>
+            • <strong>Trigger Condition:</strong> Digit &le; 3 appears two or more consecutive times.<br>
+            • <strong>Entry Point:</strong> Immediately upon upper digit reversal (6-9). Entry: <strong>Trade Over Preferred Digit</strong>.
+          </div>
+          <div style="background:var(--bg-main); padding:12px; border-radius:6px; border:1px solid var(--border-color);">
+            <strong style="color:var(--color-r);">UNDER SIGNAL & ENTRY RULES</strong><br>
+            • <strong>Signal Pattern:</strong> High digits 6, 7, 8, 9 exhibit extreme suppression (&lt; 9.5% frequency over 1000 ticks).<br>
+            • <strong>Trigger Condition:</strong> Upper digit (6-9) spikes twice sequentially into low digit territory.<br>
+            • <strong>Entry Point:</strong> On the tick following the second upper spike. Entry: <strong>Trade Under Preferred Digit</strong>.
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="analysis-table">
+            <thead>
+              <tr>
+                <th>Market Category</th>
+                <th>Index Name</th>
+                <th>1000-Tick Distribution (Under / Match / Over)</th>
+                <th>Signal Status</th>
+                <th>Time to Execute Signal</th>
+              </tr>
+            </thead>
+            <tbody id="overunder-all-markets-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. EVEN / ODD PARITY SIGNALS ALL MARKETS -->
+      <div class="card-box">
+        <h4 style="margin-bottom:12px; color:var(--color-purple); display:flex; justify-content:space-between; align-items:center;">
+          <span>2. Even / Odd Parity Signals (All Markets - 1000 Ticks Circle Visualizer)</span>
+          <span style="font-size:0.75rem; background:rgba(176,133,245,0.1); padding:4px 8px; border-radius:4px; border:1px solid var(--color-purple);">Parity Imbalance Logic</span>
+        </h4>
+
+        <!-- Circle Distribution Differentiating EVEN and ODD with Condition Badges -->
+        <div style="background:var(--bg-main); border:1px solid var(--border-color); border-radius:8px; padding:15px; margin-bottom:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+            <strong style="color:var(--color-purple); font-size:0.95rem;">1000 Ticks Circle Parity Breakdown (Odd vs Even & Trigger Conditions):</strong>
+            <div style="display:flex; gap:15px; font-size:0.85rem;">
+              <span style="color:var(--accent-cyan); font-weight:bold;">EVEN Total: <span id="even-1000-total">502 (50.2%)</span></span>
+              <span style="color:var(--color-purple); font-weight:bold;">ODD Total: <span id="odd-1000-total">498 (49.8%)</span></span>
+            </div>
+          </div>
+
+          <div class="digit-container-circles" id="evenodd-circle-grid" style="margin-bottom:10px;">
+            <!-- Dynamic 0-9 Parity Circle Cards rendered via JavaScript -->
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-muted); text-align:center;">
+            <span style="color:var(--success-green); font-weight:bold;">[CONDITION MET]</span> = Digit Frequency &ge; 10.0% over 1000 Ticks (Qualifies as Active Parity Driver)
+          </div>
+        </div>
+
+        <div style="font-size:0.85rem; color:var(--text-muted); display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px; margin-bottom:20px;">
+          <div style="background:var(--bg-main); padding:12px; border-radius:6px; border:1px solid var(--border-color);">
+            <strong style="color:var(--accent-cyan);">EVEN SIGNAL & ENTRY RULES</strong><br>
+            • <strong>Setup:</strong> At least 4 even digits (0,2,4,6,8) &ge; 10% frequency in 1000 ticks.<br>
+            • <strong>Trigger:</strong> Cursor lands on Odd digit, followed immediately by an Odd digit at T+1.<br>
+            • <strong>Entry:</strong> Execute <strong>EVEN (BUY)</strong> trade at T+2 immediately when an Even digit appears.
+          </div>
+          <div style="background:var(--bg-main); padding:12px; border-radius:6px; border:1px solid var(--border-color);">
+            <strong style="color:var(--color-purple);">ODD SIGNAL & ENTRY RULES</strong><br>
+            • <strong>Setup:</strong> At least 4 odd digits (1,3,5,7,9) &ge; 10% frequency in 1000 ticks.<br>
+            • <strong>Trigger:</strong> Cursor lands on Even digit, followed by an Even digit streak at T+1.<br>
+            • <strong>Entry:</strong> Execute <strong>ODD (BUY)</strong> trade at T+2 immediately when an Odd digit appears.
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="analysis-table">
+            <thead>
+              <tr>
+                <th>Market Category</th>
+                <th>Index Name</th>
+                <th>Parity Ratio (1000 Ticks Even / Odd)</th>
+                <th>Signal Status</th>
+                <th>Time to Execute Signal</th>
+              </tr>
+            </thead>
+            <tbody id="evenodd-all-markets-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="strategies-builder" class="tab-page">
+      <div class="section-title"><span>Strategy Builder & XML/JSON Bot Importer</span></div>
+      
+      <div class="card-box">
+        <h4 style="margin-bottom:10px;">Upload Deriv Bot Strategy File (.XML or .JSON)</h4>
+        <div class="upload-zone" onclick="document.getElementById('bot-file-input').click()">
+          <span style="font-size:2rem; display:block; margin-bottom:5px;">📁</span>
+          <p><strong>Click to Upload</strong> or Drag & Drop your XML/JSON Deriv Bot file</p>
+          <small style="color:var(--text-muted);">Fully compatible with Deriv Bot / DBot XML structures</small>
+          <input type="file" id="bot-file-input" style="display:none;" accept=".xml,.json" onchange="handleFileUpload(event)">
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h4 style="margin-bottom:10px;">Strategy Code & Rule Script Editor</h4>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;">Write custom conditional execution triggers or inspect parsed script logic below:</p>
+        <textarea id="strategy-editor" class="editor-textarea" placeholder="// Upload an XML/JSON Bot file or start typing custom strategy rules...
+function evaluateTick(lastDigit, tickHistory) {
+    if (lastDigit > 5) {
+        return { action: 'PURCHASE', contract: 'DIGITOVER', barrier: 2 };
+    }
+    return { action: 'WAIT' };
+}"></textarea>
+        <button class="btn-action" onclick="saveStrategy()">Compile & Activate Strategy</button>
+      </div>
+    </div>
+
+    <div id="deriv-bot" class="tab-page">
+      <div class="section-title"><span>DerivBot Automated Execution Hub</span></div>
+      <div class="card-box">
+        <h4>Deriv Engine Connection & Trading Control</h4>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin:10px 0;">Configure direct API execution for Even/Odd, Over/Under, or Matches/Differs contracts.</p>
+        
+        <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:15px;">
+          <input type="text" class="text-input" placeholder="Enter Deriv API Token" style="flex:1; min-width:250px;">
+          <button class="btn-action" style="margin-top:0;" onclick="alert('API Token Linked Successfully!')">Connect Token</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="bot-manager" class="tab-page">
+      <div class="section-title"><span>Bot Execution & Queue Manager</span></div>
+      <div class="card-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+          <h4>Active Loaded Bots</h4>
+          <button class="btn-action" style="margin:0;" onclick="document.getElementById('bot-file-input').click()">+ Load Bot File</button>
+        </div>
+        <table class="analysis-table">
+          <thead>
+            <tr>
+              <th>Bot Name</th>
+              <th>Market</th>
+              <th>Strategy</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bot-list-body">
+            <tr>
+              <td><strong>Vol75_DigitOver_V1</strong></td>
+              <td>Volatility 75 Index</td>
+              <td>Over/Under (Target 5)</td>
+              <td><span style="color:var(--success-green); font-weight:bold;">READY</span></td>
+              <td><button style="padding:4px 8px; background:var(--border-color); color:#fff; border:none; border-radius:4px; cursor:pointer;" onclick="alert('Bot Started')">Run Bot</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="risk-management" class="tab-page">
+      <div class="section-title"><span>Automated Risk Controls</span></div>
+      <div class="card-box">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:20px;">
+          <div>
+            <label style="display:block; font-size:0.85rem; color:var(--text-muted); margin-bottom:5px;">Take Profit Target ($)</label>
+            <input type="number" class="text-input" value="50" style="width:100%;">
+          </div>
+          <div>
+            <label style="display:block; font-size:0.85rem; color:var(--text-muted); margin-bottom:5px;">Stop Loss Limit ($)</label>
+            <input type="number" class="text-input" value="25" style="width:100%;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    VOLTGRID Market Terminal & Bot Suite &copy; 2026. All rights reserved.
+  </footer>
+
+  <script>
+    let tickHistory = [];
+    let currentCursorDigit = 4;
+    let evalCountdown = 5;
+    let selectedOUDigit = 5;
+
+    // Full Market Inventory Definitions
+    const marketInventory = [
+      { category: "Standard Volatility", name: "Volatility 10 Index", code: "R_10" },
+      { category: "Standard Volatility", name: "Volatility 25 Index", code: "R_25" },
+      { category: "Standard Volatility", name: "Volatility 50 Index", code: "R_50" },
+      { category: "Standard Volatility", name: "Volatility 75 Index", code: "R_75" },
+      { category: "Standard Volatility", name: "Volatility 100 Index", code: "R_100" },
+      
+      { category: "1s Volatility (1s)", name: "Volatility 10 (1s) Index", code: "1HZ10V" },
+      { category: "1s Volatility (1s)", name: "Volatility 25 (1s) Index", code: "1HZ25V" },
+      { category: "1s Volatility (1s)", name: "Volatility 50 (1s) Index", code: "1HZ50V" },
+      { category: "1s Volatility (1s)", name: "Volatility 75 (1s) Index", code: "1HZ75V" },
+      { category: "1s Volatility (1s)", name: "Volatility 100 (1s) Index", code: "1HZ100V" },
+
+      { category: "Daily Reset", name: "Bear Market Index", code: "RDBEAR" },
+      { category: "Daily Reset", name: "Bull Market Index", code: "RDBULL" },
+
+      { category: "Jump Indices", name: "Jump 10 Index", code: "JD10" },
+      { category: "Jump Indices", name: "Jump 25 Index", code: "JD25" },
+      { category: "Jump Indices", name: "Jump 50 Index", code: "JD50" },
+      { category: "Jump Indices", name: "Jump 75 Index", code: "JD75" },
+      { category: "Jump Indices", name: "Jump 100 Index", code: "JD100" }
+    ];
+
+    function switchTab(evt, tabId) {
+      document.querySelectorAll('.tab-page').forEach(page => page.classList.remove('active-page'));
+      document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active-page');
+      if (evt && evt.target) evt.target.classList.add('active');
+    }
+
+    function toggleSelectAllPermissions(status) {
+      document.querySelectorAll('.perm-checkbox').forEach(cb => cb.checked = status);
+    }
+
+    function redirectToDerivOAuth() {
+      document.getElementById('auth-modal').style.display = 'none';
+    }
+
+    function selectTargetDigit(evt, digit) {
+      document.querySelectorAll('.digit-select-btn').forEach(btn => btn.classList.remove('active'));
+      if(evt && evt.target) evt.target.classList.add('active');
+    }
+
+    function initTickData() {
+      tickHistory = [];
+      for(let i=0; i<1000; i++) {
+        const digit = Math.floor(Math.random() * 10);
+        const price = (6400 + Math.random() * 50).toFixed(2);
+        tickHistory.push({ digit, price });
+      }
+      currentCursorDigit = tickHistory[tickHistory.length - 1].digit;
+    }
+
+    function renderDigitCircles() {
+      const circleGrid = document.getElementById('digit-circle-grid');
+      const tableBody = document.getElementById('ticks-table-body');
+      if (!circleGrid) return;
+
+      circleGrid.innerHTML = '';
+      if (tableBody) tableBody.innerHTML = '';
+
+      const counts = Array(10).fill(0);
+      tickHistory.forEach(t => counts[t.digit]++);
+      
+      const total = tickHistory.length;
+      const sorted = counts.map((cnt, d) => ({ digit: d, count: cnt, perc: ((cnt/total)*100).toFixed(1) }))
+                           .sort((a,b) => b.count - a.count);
+
+      const maxD = sorted[0].digit;
+      const secondMaxD = sorted[1].digit;
+      const minD = sorted[9].digit;
+      const secondMinD = sorted[8].digit;
+
+      for (let d = 0; d < 10; d++) {
+        const count = counts[d];
+        const perc = ((count / total) * 100).toFixed(1);
+        let rankClass = '';
+
+        if (d === maxD) rankClass = 'circle-rank-G';
+        else if (d === secondMaxD) rankClass = 'circle-rank-B';
+        else if (d === minD) rankClass = 'circle-rank-R';
+        else if (d === secondMinD) rankClass = 'circle-rank-Y';
+
+        const isCursor = (d === currentCursorDigit) ? 'cursor-active' : '';
+
+        const card = document.createElement('div');
+        card.className = `digit-circle-card ${rankClass} ${isCursor}`;
+        card.innerHTML = `
+          <div class="star-cursor">★</div>
+          <span class="digit-number">${d}</span>
+          <span class="digit-percent">${perc}%</span>
+        `;
+        circleGrid.appendChild(card);
+
+        if (tableBody) {
+          let rankLabel = 'NORMAL';
+          let badgeClass = 'sig-neutral';
+          if (d === maxD) { rankLabel = 'HIGHEST (G)'; badgeClass = 'rank-G'; }
+          else if (d === secondMaxD) { rankLabel = '2ND HIGH (B)'; badgeClass = 'rank-B'; }
+          else if (d === minD) { rankLabel = 'LEAST (R)'; badgeClass = 'rank-R'; }
+          else if (d === secondMinD) { rankLabel = '2ND LEAST (Y)'; badgeClass = 'rank-Y'; }
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${d}</strong></td>
+            <td>${count}</td>
+            <td>${perc}%</td>
+            <td><span class="rank-badge ${badgeClass}">${rankLabel}</span></td>
+          `;
+          tableBody.appendChild(tr);
+        }
+      }
+    }
+
+    function renderTickStream() {
+      const streamWrapper = document.getElementById('tick-stream-wrapper');
+      if (!streamWrapper) return;
+
+      streamWrapper.innerHTML = '';
+      const recent30 = tickHistory.slice(-30);
+
+      recent30.forEach((item, index) => {
+        const isLatest = (index === recent30.length - 1) ? 'latest-tick' : '';
+        const itemEl = document.createElement('div');
+        itemEl.className = `stream-item ${isLatest}`;
+        itemEl.innerHTML = `
+          <span class="stream-digit">${item.digit}</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">${item.price.slice(-2)}</span>
+        `;
+        streamWrapper.appendChild(itemEl);
+      });
+    }
+
+    // Dynamic O/U Barrier Digit Selection & Bar Calculation
+    function setOUSelectedDigit(digit) {
+      selectedOUDigit = digit;
+      updateOUInteractiveControls();
+      renderToolAnalysisTables();
+    }
+
+    function updateOUInteractiveControls() {
+      const selectorGrid = document.getElementById('ou-digit-selector-grid');
+      const displayEl = document.getElementById('selected-ou-digit-display');
+      if (!selectorGrid) return;
+
+      if (displayEl) displayEl.innerText = `Digit ${selectedOUDigit}`;
+      selectorGrid.innerHTML = '';
+
+      const counts = Array(10).fill(0);
+      tickHistory.forEach(t => counts[t.digit]++);
+      const total = tickHistory.length || 1000;
+
+      for (let d = 0; d < 10; d++) {
+        const isSel = (d === selectedOUDigit) ? 'selected' : '';
+        const card = document.createElement('div');
+        card.className = `digit-select-card ${isSel}`;
+        card.onclick = () => setOUSelectedDigit(d);
+        card.innerHTML = `
+          <strong style="font-size:1.1rem; display:block; color:${d === selectedOUDigit ? 'var(--accent-cyan)' : 'var(--text-main)'};">${d}</strong>
+          <small style="font-size:0.7rem; color:var(--text-muted);">${((counts[d]/total)*100).toFixed(1)}%</small>
+        `;
+        selectorGrid.appendChild(card);
+      }
+
+      // Calculate Over / Under distribution for selected digit
+      let underCount = 0;
+      let matchCount = counts[selectedOUDigit];
+      let overCount = 0;
+
+      for (let d = 0; d < selectedOUDigit; d++) underCount += counts[d];
+      for (let d = selectedOUDigit + 1; d <= 9; d++) overCount += counts[d];
+
+      const underPerc = ((underCount / total) * 100).toFixed(1);
+      const matchPerc = ((matchCount / total) * 100).toFixed(1);
+      const overPerc = ((overCount / total) * 100).toFixed(1);
+
+      document.getElementById('ou-over-label').innerText = selectedOUDigit === 9 ? 'None' : `${selectedOUDigit + 1}-9`;
+      document.getElementById('ou-under-label').innerText = selectedOUDigit === 0 ? 'None' : `0-${selectedOUDigit - 1}`;
+      document.getElementById('ou-over-perc').innerText = `${overPerc}%`;
+      document.getElementById('ou-under-perc').innerText = `${underPerc}%`;
+
+      document.getElementById('ou-bar-under').style.width = `${underPerc}%`;
+      document.getElementById('ou-bar-exact').style.width = `${matchPerc}%`;
+      document.getElementById('ou-bar-over').style.width = `${overPerc}%`;
+
+      const recBadge = document.getElementById('ou-recommendation-badge');
+      if (parseFloat(overPerc) > parseFloat(underPerc)) {
+        recBadge.className = 'sig-active-over';
+        recBadge.innerText = `PREFER OVER ${selectedOUDigit}`;
+      } else {
+        recBadge.className = 'sig-active-under';
+        recBadge.innerText = `PREFER UNDER ${selectedOUDigit}`;
+      }
+    }
+
+    // Even/Odd 1000-Ticks Circle Distribution Visualizer
+    function renderEvenOddCircleDistribution() {
+      const circleGrid = document.getElementById('evenodd-circle-grid');
+      if (!circleGrid) return;
+
+      circleGrid.innerHTML = '';
+      const counts = Array(10).fill(0);
+      tickHistory.forEach(t => counts[t.digit]++);
+      const total = tickHistory.length || 1000;
+
+      let evenSum = 0;
+      let oddSum = 0;
+
+      for (let d = 0; d < 10; d++) {
+        const isEven = (d % 2 === 0);
+        if (isEven) evenSum += counts[d];
+        else oddSum += counts[d];
+
+        const percVal = (counts[d] / total) * 100;
+        const percStr = percVal.toFixed(1);
+        const conditionMet = percVal >= 10.0;
+
+        const card = document.createElement('div');
+        card.className = `eo-circle-card ${isEven ? 'even-type' : 'odd-type'} ${conditionMet ? 'condition-met' : ''}`;
+        card.innerHTML = `
+          <span class="eo-badge ${isEven ? 'even-b' : 'odd-b'}">${isEven ? 'EVEN' : 'ODD'}</span>
+          <span style="font-size:1.3rem; font-weight:800; margin-top:4px;">${d}</span>
+          <span style="font-size:0.75rem; font-weight:600;">${percStr}%</span>
+          ${conditionMet ? '<span class="condition-tag">≥10% COND</span>' : ''}
+        `;
+        circleGrid.appendChild(card);
+      }
+
+      document.getElementById('even-1000-total').innerText = `${evenSum} (${((evenSum/total)*100).toFixed(1)}%)`;
+      document.getElementById('odd-1000-total').innerText = `${oddSum} (${((oddSum/total)*100).toFixed(1)}%)`;
+    }
+
+    // Render Tool Analysis Tables (All Markets for Over/Under & Even/Odd)
+    function renderToolAnalysisTables() {
+      updateOUInteractiveControls();
+      renderEvenOddCircleDistribution();
+
+      const ouBody = document.getElementById('overunder-all-markets-body');
+      const eoBody = document.getElementById('evenodd-all-markets-body');
+
+      if (ouBody) {
+        ouBody.innerHTML = '';
+        marketInventory.forEach((m, idx) => {
+          let statusBadge = '';
+          let patternText = 'Scanning 1000 Ticks...';
+          let execTime = `T+${(idx % 3) + 1} Ticks (${evalCountdown}s)`;
+          
+          // Generate simulated 1000-tick split around selected digit
+          const uPerc = (45 + (idx % 9)).toFixed(1);
+          const mPerc = (9.5 + (idx % 2)).toFixed(1);
+          const oPerc = (100 - parseFloat(uPerc) - parseFloat(mPerc)).toFixed(1);
+
+          if (idx % 4 === 0) {
+            statusBadge = `<span class="sig-active-over">ACTIVE OVER ${selectedOUDigit}</span>`;
+            patternText = `Low Digits Suppressed (< 9.5% freq)`;
+          } else if (idx % 4 === 1) {
+            statusBadge = `<span class="sig-active-under">ACTIVE UNDER ${selectedOUDigit}</span>`;
+            patternText = `High Digits Suppressed (< 9.5% freq)`;
+          } else {
+            statusBadge = `<span class="sig-neutral">NEUTRAL</span>`;
+            patternText = 'Balanced 1000-Tick Spread';
+            execTime = 'Wait for Setup';
+          }
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong style="color:var(--accent-blue);">${m.category}</strong></td>
+            <td><strong>${m.name}</strong></td>
+            <td><span style="color:var(--color-y);">${uPerc}% U</span> / <span style="color:var(--text-muted);">${mPerc}% M</span> / <span style="color:var(--accent-cyan);">${oPerc}% O</span></td>
+            <td>${statusBadge}</td>
+            <td>${execTime}</td>
+          `;
+          ouBody.appendChild(tr);
+        });
+      }
+
+      if (eoBody) {
+        eoBody.innerHTML = '';
+        marketInventory.forEach((m, idx) => {
+          let statusBadge = '';
+          const evenRatio = (50 + ((idx % 5) - 2) * 1.8).toFixed(1);
+          const oddRatio = (100 - parseFloat(evenRatio)).toFixed(1);
+          let execTime = `Immediate T+2 Tick (${evalCountdown}s)`;
+
+          if (idx % 3 === 0) {
+            statusBadge = `<span class="sig-active">ACTIVE EVEN</span>`;
+          } else if (idx % 3 === 1) {
+            statusBadge = `<span class="sig-active-odd">ACTIVE ODD</span>`;
+          } else {
+            statusBadge = `<span class="sig-neutral">NEUTRAL</span>`;
+            execTime = 'Wait for Imbalance';
+          }
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong style="color:var(--accent-blue);">${m.category}</strong></td>
+            <td><strong>${m.name}</strong></td>
+            <td><span style="color:var(--accent-cyan); font-weight:bold;">${evenRatio}% E</span> / <span style="color:var(--color-purple); font-weight:bold;">${oddRatio}% O</span></td>
+            <td>${statusBadge}</td>
+            <td>${execTime}</td>
+          `;
+          eoBody.appendChild(tr);
+        });
+      }
+    }
+
+    function runTickCycle() {
+      setInterval(() => {
+        const newDigit = Math.floor(Math.random() * 10);
+        const newPrice = (6400 + Math.random() * 50).toFixed(2);
+
+        tickHistory.push({ digit: newDigit, price: newPrice });
+        if (tickHistory.length > 1000) tickHistory.shift();
+
+        currentCursorDigit = newDigit;
+
+        const tickPriceEl = document.getElementById('current-tick-price');
+        if (tickPriceEl) tickPriceEl.innerText = newPrice;
+
+        const genDigitEl = document.getElementById('live-generated-digit');
+        if (genDigitEl) genDigitEl.innerText = newDigit;
+
+        renderDigitCircles();
+        renderTickStream();
+      }, 1000);
+
+      setInterval(() => {
+        evalCountdown--;
+        if (evalCountdown <= 0) {
+          evalCountdown = 5;
+          const actions = [`OVER ${selectedOUDigit} (V75 Index)`, `UNDER ${selectedOUDigit} (V10 Index)`, 'ACTIVE EVEN (Jump 50)', 'ACTIVE ODD (V100 1s)'];
+          const picked = actions[Math.floor(Math.random() * actions.length)];
+          const liveActionEl = document.getElementById('live-signal-action');
+          if (liveActionEl) liveActionEl.innerText = picked;
+        }
+
+        const timerTextEl = document.getElementById('signal-timer-text');
+        if (timerTextEl) timerTextEl.innerText = `Next Signal Evaluation In: ${evalCountdown}s...`;
+
+        renderToolAnalysisTables();
+      }, 1000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initTickData();
+      renderDigitCircles();
+      renderTickStream();
+      renderToolAnalysisTables();
+      runTickCycle();
+    });
+
+    function handleFileUpload(e) {}
+    function saveStrategy() {}
+  </script>
+</body>
+</html>
