@@ -8,7 +8,7 @@ test("rolling analyzer keeps only the latest window", () => {
   a.push(1); a.push(2); a.push(1); a.push(3);
   assert.deepEqual(a.ticks, [2,1,3]);
   assert.equal(a.snapshot().ready, true);
-  assert.deepEqual(a.frequencies(), [0,100/3,0,100/3,0,0,0,0,0,0].map(x=>x));
+  assert.deepEqual(a.frequencies(), [0,100/3,100/3,100/3,0,0,0,0,0,0].map(x=>x));
 });
 
 test("risk manager pauses after two consecutive losses", () => {
