@@ -1,4 +1,6 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import {basename,resolve} from "node:path";
+dotenv.config({path:process.env.ENV_FILE||resolve(process.cwd(),basename(process.cwd())==="server"?"../.env":".env")});
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
