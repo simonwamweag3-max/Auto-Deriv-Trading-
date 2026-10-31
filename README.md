@@ -3,7 +3,7 @@
 React + Node.js multi-user dashboard foundation for Deriv synthetic-index digit strategies (Over 3 / Under 6).
 
 ## Current stage
-This branch adds an isolated per-user bot engine, 1,000-tick rolling digit analyzer, Over 3 / Under 6 state machines, risk controls, demo feed, API routes and dashboard scaffold. **Demo mode only: no real orders are sent.**
+This branch adds an authenticated multi-user dashboard, isolated Deriv account connections, a 1,000-tick rolling digit analyzer, Over 3 / Under 6 state machines, server-side Deriv WebSocket tick feeds, proposal/buy/settlement handling and persisted risk controls. **Demo-account contracts can be placed; real-account trading remains disabled by default.**
 
 ## Synthetic-index coverage
 The market selector includes a broad fallback catalogue and can discover the currently active synthetic-index symbols directly from Deriv using the public `active_symbols` WebSocket request. Set `VITE_DERIV_APP_ID` in the client environment to enable live discovery. The live API catalogue is authoritative and automatically includes newly listed synthetic markets; the fallback list is provided for offline/demo use. The selector includes Volatility (standard and 1-second), Crash, Boom, Jump, Step, Range Break, Drift Switching, DEX and derived-market entries where supported by the API.
@@ -53,3 +53,7 @@ The server keeps the app JWT in browser memory only. Deriv PATs are encrypted at
 ### Important limits
 
 The engine's martingale multiplier is capped at 2 and the number of trades is capped at six per session, with a stop after two consecutive losses. These controls do not guarantee a maximum financial loss: market gaps, latency, contract pricing, disconnections and unsettled positions can still cause losses. Real-money mode remains disabled unless the server owner explicitly enables it. Test only on a Deriv demo account first.
+
+### Runtime architecture note
+
+The current session worker registry runs in one Node.js process. Deploy one server instance for this release. Before running multiple API replicas, move active-session ownership and distributed locks to a shared worker/queue system (for example Redis) so the same session cannot start on two replicas. The GitHub Actions pipeline runs the Node tests and frontend production build; a successful build does not replace live Deriv demo-account integration testing.
