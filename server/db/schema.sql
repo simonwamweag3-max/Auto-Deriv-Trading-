@@ -7,3 +7,7 @@ CREATE TABLE IF NOT EXISTS trade_records(id UUID PRIMARY KEY DEFAULT gen_random_
 CREATE INDEX IF NOT EXISTS sessions_user_idx ON trading_sessions(user_id);
 CREATE INDEX IF NOT EXISTS events_session_idx ON trade_events(session_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS deriv_connections_user_idx ON deriv_connections(user_id);
+
+-- Upgrade databases created by earlier demo-only versions.
+ALTER TABLE trading_sessions ADD COLUMN IF NOT EXISTS connection_id UUID REFERENCES deriv_connections(id) ON DELETE RESTRICT;
+ALTER TABLE trading_sessions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
