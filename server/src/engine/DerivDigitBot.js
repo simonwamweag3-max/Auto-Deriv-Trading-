@@ -1,0 +1,9 @@
+import{TickAnalyzer}from"./TickAnalyzer.js";import{RiskManager}from"./RiskManager.js";import{Over3Strategy,Under6Strategy}from"./strategies.js";import{nanoid}from"nanoid";
+export class DerivDigitBot{
+ constructor({userId,symbol="R_100",mode="DEMO",baseStake=1,multiplier=2,onEvent=()=>{}}){if(!userId)throw Error("userId required");if(mode!=="DEMO")throw Error("Live trading disabled in this release");this.userId=userId;this.symbol=symbol;this.mode=mode;this.onEvent=onEvent;this.analyzer=new TickAnalyzer(1000);this.risk=new RiskManager({baseStake,multiplier});this.over3=new Over3Strategy(e=>this.log(e));this.under6=new Under6Strategy(e=>this.log(e));this.running=false;this.orders=[];this.lastTick=null;}
+ log(e){this.onEvent({...e,userId:this.userId,at:new Date().toISOString()});}
+ async processDigit(d,quote=d){if(!this.running||this.risk.paused)return null;const s=this.analyzer.push(d);this.lastTick={digit:d,quote,at:new Date().toISOString()};if(s.spike)this.log({type:"digit_spike",digit:d,delta:s.frequencies[d]-s.previous[d]});const order=this.over3.onTick(d,s.frequencies,s.ready)||this.under6.onTick(d,s.frequencies,s.ready);if(order&&this.risk.canTrade()){const trade={id:nanoid(),mode:"DEMO",status:"SIMULATED_NOT_PURCHASED",order,stake:this.risk.stake(),createdAt:new Date().toISOString()};this.orders.push(trade);this.log({type:"demo_signal_created",trade});return trade;}return null;}
+ start(){this.running=true;this.log({type:"bot_started",symbol:this.symbol,mode:this.mode});}
+ stop(){this.running=false;this.log({type:"bot_stopped"});}
+ snapshot(){return{userId:this.userId,symbol:this.symbol,mode:this.mode,running:this.running,stats:this.analyzer.snapshot(),over3State:this.over3.state,under6State:this.under6.state,risk:this.risk.snapshot(),lastTick:this.lastTick,orders:this.orders.slice(-20)};}
+}
