@@ -5,6 +5,9 @@ React + Node.js multi-user dashboard foundation for Deriv synthetic-index digit 
 ## Current stage
 This branch adds an isolated per-user bot engine, 1,000-tick rolling digit analyzer, Over 3 / Under 6 state machines, risk controls, demo feed, API routes and dashboard scaffold. **Demo mode only: no real orders are sent.**
 
+## Synthetic-index coverage
+The market selector includes a broad fallback catalogue and can discover the currently active synthetic-index symbols directly from Deriv using the public `active_symbols` WebSocket request. Set `VITE_DERIV_APP_ID` in the client environment to enable live discovery. The live API catalogue is authoritative and automatically includes newly listed synthetic markets; the fallback list is provided for offline/demo use. The selector includes Volatility (standard and 1-second), Crash, Boom, Jump, Step, Range Break, Drift Switching, DEX and derived-market entries where supported by the API.
+
 ## Run
 - Node.js 20+
 - Copy `.env.example` to `.env`
