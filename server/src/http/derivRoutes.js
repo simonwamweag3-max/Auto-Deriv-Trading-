@@ -1,0 +1,9 @@
+import {Router} from "express";
+import {requireDatabase} from "../db.js";
+import {encryptSecret} from "../security/crypto.js";
+import {validateDerivCredentials} from "../deriv/DerivWsClient.js";
+import {requireAuth} from "./auth.js";
+export const derivRouter=Router();derivRouter.use(requireAuth);
+derivRouter.get("/accounts",async(req,res,next)=>{try{const r=await requireDatabase().query("SELECT id,deriv_account_id,account_type,currency,created_at FROM deriv_connections WHERE user_id=$1 ORDER BY created_at DESC",[req.user.sub]);res.json({accounts:r.rows});}catch(e){next(e);}});
+derivRouter.post("/accounts",async(req,res,next)=>{try{const accountId=String(req.body?.accountId||"").trim(),token=String(req.body?.token||"").trim();if(!/^[A-Za-z0-9_-]{5,32}$/.test(accountId)||token.length<20||token.length>4096)return res.status(400).json({error:"Provide a valid Deriv account ID and API token."});const verified=await validateDerivCredentials({accountId,token,appId:process.env.DERIV_APP_ID});const db=requireDatabase();const r=await db.query("INSERT INTO deriv_connections(user_id,deriv_account_id,account_type,currency,token_ciphertext) VALUES($1,$2,$3,$4,$5) ON CONFLICT(user_id,deriv_account_id) DO UPDATE SET account_type=EXCLUDED.account_type,currency=EXCLUDED.currency,token_ciphertext=EXCLUDED.token_ciphertext,updated_at=now() RETURNING id,deriv_account_id,account_type,currency",[req.user.sub,accountId,verified.accountType,verified.currency,encryptSecret(token)]);res.status(201).json({account:r.rows[0],balance:verified.balance,tokenStored:true});}catch(e){next(e);}});
+derivRouter.delete("/accounts/:id",async(req,res,next)=>{try{const db=requireDatabase();await db.query("DELETE FROM deriv_connections WHERE id=$1 AND user_id=$2",[req.params.id,req.user.sub]);res.sendStatus(204);}catch(e){next(e);}});

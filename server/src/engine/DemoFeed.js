@@ -1,0 +1,1 @@
+export class DemoFeed{constructor(bot,ms=350){this.bot=bot;this.ms=ms;this.timer=null;}start(){if(this.timer)return;this.timer=setInterval(()=>{const d=Math.floor(Math.random()*10);this.bot.processDigit(d).catch(e=>this.bot.log({type:"engine_error",message:e.message}));},this.ms);}stop(){clearInterval(this.timer);this.timer=null;}}

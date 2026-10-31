@@ -1,0 +1,3 @@
+import jwt from "jsonwebtoken";
+export function signToken(user){return jwt.sign({sub:user.id,email:user.email},process.env.JWT_SECRET,{expiresIn:"12h",issuer:"deriv-digit-engine",audience:"deriv-digit-client"});}
+export function requireAuth(req,res,next){const value=req.headers.authorization||"";const token=value.startsWith("Bearer ")?value.slice(7):"";if(!token)return res.status(401).json({error:"Sign in is required."});try{req.user=jwt.verify(token,process.env.JWT_SECRET,{issuer:"deriv-digit-engine",audience:"deriv-digit-client"});next();}catch{return res.status(401).json({error:"Session expired. Sign in again."});}}
